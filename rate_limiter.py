@@ -1,6 +1,7 @@
 import datetime
 from collections import deque
 from time import sleep
+import numpy as np
 
 class RateLimit:
     def __init__(self, max_calls: int, time_window: int):

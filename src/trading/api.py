@@ -8,15 +8,9 @@ from typing import Any, Dict, Optional, List
 from nacl.signing import SigningKey
 import time
 
+from utils.logger import logger
 from rate_limiter import RateLimit
 from config import API_KEY, PUBLIC_KEY, PRIVATE_KEY, INVESTMENT_AMOUNT, TARGET_PROFIT, SYMBOL, BASE_URL
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 class CryptoAPITrading:
     def __init__(self):
