@@ -1,0 +1,50 @@
+{
+    "trading": {
+        "symbol": "BTC-USD",
+        "timeframe": "1h",
+        "initial_capital": 10000,
+        "position_size": 0.2,
+        "max_positions": 1,
+        "stop_loss": 0.02,
+        "take_profit": 0.04
+    },
+    "strategy": {
+        "rsi_period": 14,
+        "rsi_oversold": 30,
+        "rsi_overbought": 70,
+        "macd_fast": 12,
+        "macd_slow": 26,
+        "macd_signal": 9
+    },
+    "backtesting": {
+        "commission": 0.001,
+        "slippage": 0.001,
+        "trade_on_close": false,
+        "hedging": false,
+        "exclusive_orders": true
+    },
+    "optimization": {
+        "parameter_ranges": {
+            "rsi_period": [10, 30, 5],
+            "rsi_oversold": [20, 40, 5],
+            "rsi_overbought": [60, 80, 5],
+            "macd_fast": [8, 20, 4],
+            "macd_slow": [20, 40, 5],
+            "macd_signal": [5, 15, 3]
+        },
+        "maximize": "Sharpe Ratio",
+        "method": "grid"
+    },
+    "visualization": {
+        "update_interval": 5000,
+        "host": "localhost",
+        "port": 8050,
+        "debug": false
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "trading_bot.log",
+        "max_bytes": 10485760,
+        "backup_count": 5
+    }
+} 

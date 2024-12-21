@@ -1,24 +1,19 @@
 # run_backtest.py
-from src.ml.strategy_optimizer import StrategyOptimizer
-from src.utils.logger import logger
-from src.trading.strategy import TradingStrategy
+from trading_bot import (
+    MLOptimizer,
+    logger,
+    TradingStrategy
+)
 from backtesting import Backtest
 import pandas as pd
+import sys
+from trading_bot.utils.data_downloader import DataDownloader
 
 def run_optimized_backtest():
-    # Load historical data
-    historical_data = pd.read_csv('data/historical_btc.csv')
-    logger.info(f"Loaded columns: {historical_data.columns}")
-    
-    # Convert the first column to datetime index
-    historical_data['Date'] = pd.to_datetime(historical_data.iloc[:, 0])
-    historical_data.set_index('Date', inplace=True)
-    
-    # Verify required columns
-    required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
-    for col in required_columns:
-        if col not in historical_data.columns:
-            raise ValueError(f"Missing required column: {col}")
+    # Load and validate historical data
+    downloader = DataDownloader(data_dir="data")
+    historical_data = downloader.get_data("historical_btc.csv")
+    logger.info(f"Loaded {len(historical_data)} rows of data")
     
     # Calculate the midpoint date
     mid_point = len(historical_data) // 2
@@ -29,7 +24,7 @@ def run_optimized_backtest():
     valid_data = historical_data.iloc[mid_point:]
     
     # Optimize strategy
-    optimizer = StrategyOptimizer(train_data)
+    optimizer = MLOptimizer(train_data)
     best_params = optimizer.optimize(generations=5)
     
     logger.info(f"Best parameters found: {best_params}")
@@ -45,9 +40,23 @@ def run_optimized_backtest():
         trade_on_close=True
     )
     
-    validation_stats = bt.run(**best_params)
-    logger.info(f"Validation metrics: {validation_stats}")
-    return validation_stats
+    validation_stats = bt.run(best_params)
     
+    logger.info("Validation Results:")
+    logger.info(f"Return: {validation_stats['Return [%]']:.2f}%")
+    logger.info(f"Sharpe Ratio: {validation_stats['Sharpe Ratio']:.2f}")
+    logger.info(f"Max Drawdown: {validation_stats['Max. Drawdown [%]']:.2f}%")
+    
+    return {
+        'train_metrics': optimizer.best_metrics['stats'],
+        'validation_metrics': validation_stats,
+        'parameters': best_params
+    }
+
 if __name__ == "__main__":
-    run_optimized_backtest()
+    try:
+        results = run_optimized_backtest()
+        logger.info("Backtest completed successfully")
+    except Exception as e:
+        logger.error(f"Backtest failed: {e}")
+        sys.exit(1)

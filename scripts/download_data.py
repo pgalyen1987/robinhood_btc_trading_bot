@@ -1,47 +1,40 @@
-import yfinance as yf
-import pandas as pd
-from datetime import datetime, timedelta
-import os
-from utils.logger import logger
+#!/usr/bin/env python3
+"""Script to download historical BTC data."""
 
-def download_historical_data():
-    """Download and save historical BTC data"""
+import sys
+from datetime import datetime
+from trading_bot.utils.data_downloader import DataDownloader
+from trading_bot.utils.logger import setup_logger, logger
+
+def main():
+    """Download historical BTC data."""
     try:
-        # Create the data directory if it doesn't exist
-        if not os.path.exists('data'):
-            os.makedirs('data')
-            logger.info("Created data directory")
-
-        # Download BTC-USD data for the last 2 years
-        btc = yf.download(
-            'BTC-USD', 
-            start=(datetime.now() - timedelta(days=730)).strftime('%Y-%m-%d'),
-            end=datetime.now().strftime('%Y-%m-%d'),
-            interval='1d'
-        )
-
-        # Verify data quality
-        if btc.empty:
-            raise ValueError("Downloaded data is empty")
-
-        # Keep only required columns in correct order
-        required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
-        btc = btc[required_columns]
-
-        # Clean up the data structure
-        btc.columns = btc.columns.get_level_values(0)  # Remove multi-level columns if present
-        btc.index = pd.to_datetime(btc.index)
-        btc.index.name = 'Date'
-
-        # Save with index but without extra headers
-        btc.to_csv('data/historical_btc.csv', header=True)
-        logger.info(f"First few rows of saved data:\n{btc.head()}")
+        # Set up logging
+        setup_logger(level="INFO")
         
-        return True
-
+        # Initialize downloader
+        downloader = DataDownloader(symbol="BTC-USD")
+        
+        # Download data
+        start_date = "2023-01-01"
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        
+        logger.info(f"Downloading {downloader.symbol} data from {start_date} to {end_date}")
+        data = downloader.download_historical_data(
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        # Save data
+        output_file = "btc_historical.csv"
+        downloader.save_data(data, output_file)
+        
+        logger.info(f"Successfully downloaded {len(data)} rows of data")
+        return 0
+        
     except Exception as e:
-        logger.error(f"Error downloading historical data: {e}")
-        return False
+        logger.error(f"Failed to download data: {str(e)}")
+        return 1
 
 if __name__ == "__main__":
-    download_historical_data() 
+    sys.exit(main()) 
